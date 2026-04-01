@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kontakt Import — Treppen Arte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --bg: #F5F3EE;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE6;
+    --border: #E2DDD5;
+    --border2: #CCC8BF;
+    --text: #1A1916;
+    --text2: #6B6760;
+    --text3: #A8A49E;
+    --accent: #2D5A3D;
+    --accent-light: #EAF2EC;
+    --accent-text: #1D3D28;
+    --danger: #8B2020;
+    --danger-light: #FDF0F0;
+    --warning: #7A5C1E;
+    --warning-light: #FDF8EE;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 15px; font-weight: 500; letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px; }
+  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+  .api-status { font-size: 12px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+  .main { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+  .section-title { font-size: 12px; font-weight: 500; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1rem; }
+
+  .tabs { display: flex; background: var(--surface2); border-radius: var(--radius); padding: 4px; gap: 4px; margin-bottom: 1.5rem; }
+  .tab { flex: 1; padding: 9px 12px; font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 400; background: transparent; border: none; border-radius: 7px; cursor: pointer; color: var(--text2); transition: all 0.15s; }
+  .tab.active { background: var(--surface); color: var(--text); font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .drop-zone { border: 1.5px dashed var(--border2); border-radius: var(--radius-lg); padding: 2.5rem 2rem; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface); }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: var(--accent-light); }
+  .drop-zone.has-file { border-style: solid; border-color: var(--accent); }
+  .drop-icon { font-size: 28px; margin-bottom: 12px; }
+  .drop-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .drop-sub { font-size: 12px; color: var(--text3); }
+  input[type=file] { display: none; }
+
+  .preview-img { max-width: 100%; max-height: 200px; border-radius: var(--radius); border: 1px solid var(--border); margin-top: 1rem; object-fit: contain; }
+  .pdf-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 1rem; background: var(--warning-light); color: var(--warning); font-size: 12px; padding: 6px 12px; border-radius: 20px; font-weight: 500; }
+
+  textarea { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--surface); resize: vertical; min-height: 160px; line-height: 1.6; transition: border-color 0.15s; }
+  textarea:focus { outline: none; border-color: var(--accent); }
+
+  .hint-box { background: var(--surface2); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--text2); margin-top: 10px; line-height: 1.6; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 1.25rem; flex-wrap: wrap; }
+  .btn-primary { background: var(--accent); color: #fff; border: none; padding: 11px 22px; border-radius: var(--radius); font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: opacity 0.15s; display: flex; align-items: center; gap: 8px; }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); padding: 11px 18px; border-radius: var(--radius); font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+  .status { display: none; padding: 12px 16px; border-radius: var(--radius); font-size: 13px; margin-top: 1.25rem; align-items: center; gap: 10px; }
+  .status.show { display: flex; }
+  .status.loading { background: var(--surface2); color: var(--text2); }
+  .status.success { background: var(--accent-light); color: var(--accent-text); }
+  .status.error { background: var(--danger-light); color: var(--danger); }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .divider { height: 1px; background: var(--border); margin: 2rem 0; }
+
+  /* Results */
+  .results { display: none; }
+  .results.show { display: block; }
+
+  .address-chooser { margin-bottom: 1.5rem; }
+  .chooser-label { font-size: 13px; color: var(--text2); margin-bottom: 10px; }
+  .addr-options { display: flex; flex-direction: column; gap: 8px; }
+  .addr-option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all 0.15s; background: var(--surface); }
+  .addr-option:hover { border-color: var(--border2); background: var(--surface2); }
+  .addr-option.selected { border-color: var(--accent); background: var(--accent-light); }
+  .addr-option input[type=radio] { margin-top: 2px; accent-color: var(--accent); }
+  .addr-option-text { font-size: 13px; line-height: 1.6; }
+  .addr-option-label { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+
+  .contact-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.25rem; }
+  .card-header { background: var(--surface2); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 13px; color: #fff; flex-shrink: 0; }
+  .card-name { font-weight: 500; font-size: 15px; }
+  .card-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
+  .card-body { padding: 16px 18px; }
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field { }
+  .field.full { grid-column: 1 / -1; }
+  .field label { display: block; font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+  .field input { width: 100%; border: 1px solid var(--border); border-radius: 7px; padding: 8px 11px; font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--bg); transition: border-color 0.15s; }
+  .field input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+  .field-section { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; padding: 12px 0 8px; border-top: 1px solid var(--border); margin-top: 8px; grid-column: 1 / -1; }
+
+  .multi-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .multi-badge { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text3); background: var(--surface2); padding: 4px 10px; border-radius: 20px; }
+
+  .success-screen { display: none; text-align: center; padding: 3rem 1rem; }
+  .success-screen.show { display: block; }
+  .success-icon { font-size: 40px; margin-bottom: 1rem; }
+  .success-title { font-size: 20px; font-weight: 500; margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: var(--text2); }
+
+  .config-bar { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1.5rem; }
+  .config-bar label { font-size: 12px; color: var(--text3); white-space: nowrap; }
+  .config-bar input { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text); background: var(--bg); }
+  .config-bar input:focus { outline: none; border-color: var(--accent); }
+
+  @media (max-width: 520px) {
+    .field-grid { grid-template-columns: 1fr; }
+    .field.full { grid-column: 1; }
+    .main { padding: 1.5rem 1rem 3rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Kontakt Import
+  </div>
+  <div class="api-status" id="apiStatus">bereit</div>
+</div>
+
+<div class="main">
+
+  <!-- Config -->
+  <div class="config-bar">
+    <label>Script URL:</label>
+    <input type="text" id="scriptUrl" placeholder="Google Apps Script Web App URL hier einfügen..." value="">
+    <button class="btn-ghost" style="padding:6px 12px;font-size:12px;" onclick="saveConfig()">Speichern</button>
+  </div>
+
+  <div class="section-title">Eingabe</div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('foto')">📷 Foto</button>
+    <button class="tab" onclick="switchTab('pdf')">📄 PDF-Plan</button>
+    <button class="tab" onclick="switchTab('mail')">✉️ E-Mail</button>
+  </div>
+
+  <!-- FOTO -->
+  <div id="panel-foto" class="panel active">
+    <div class="drop-zone" id="dropFoto" onclick="document.getElementById('inputFoto').click()" ondragover="dragOver(event,'dropFoto')" ondragleave="dragLeave('dropFoto')" ondrop="dropFile(event,'foto')">
+      <div class="drop-icon">📷</div>
+      <div class="drop-title">Foto hochladen</div>
+      <div class="drop-sub">Handschriftliche Adresse, Visitenkarte, Briefkopf — JPG, PNG, HEIC</div>
+      <img id="prevFoto" class="preview-img" style="display:none;">
+    </div>
+    <input type="file" id="inputFoto" accept="image/*" onchange="loadImage(this)">
+    <div class="btn-row">
+      <button class="btn-primary" id="btnFoto" onclick="analyzeImage()" disabled>Adresse erkennen</button>
+      <button class="btn-ghost" onclick="clearInput('foto')">Löschen</button>
+    </div>
+  </div>
+
+  <!-- PDF -->
+  <div id="panel-pdf" class="panel">
+    <div class="drop-zone" id="dropPdf" onclick="document.getElementById('inputPdf').click()" ondragover="dragOver(event,'dropPdf')" ondragleave="dragLeave('dropPdf')" ondrop="dropFile(event,'pdf')">
+      <div class="drop-icon">📄</div>
+      <div class="drop-title">PDF-Plan hochladen</div>
+      <div class="drop-sub">Bauplan, Angebotsanfrage, Grundriss-PDF — Seite 1 wird analysiert</div>
+      <div id="pdfBadge" style="display:none;" class="pdf-badge">📎 <span id="pdfName"></span></div>
+    </div>
+    <input type="file" id="inputPdf" accept="application/pdf" onchange="loadPDF(this)">
+    <div class="hint-box">Das Tool liest Text und Titelblock des PDFs — Bauherr, Baustelle, Planer werden automatisch erkannt.</div>
+    <div class="btn-row">
+      <button class="btn-primary" id="btnPdf" onclick="analyzePDF()" disabled>Adressen erkennen</button>
+      <button class="btn-ghost" onclick="clearInput('pdf')">Löschen</button>
+    </div>
+  </div>
+
+  <!-- MAIL -->
+  <div id="panel-mail" class="panel">
+    <textarea id="mailText" placeholder="E-Mail(s) hier einfügen — auch mehrere nacheinander. Name, Adresse, Telefon und E-Mail werden automatisch erkannt..."></textarea>
+    <div class="hint-box">Tipp: Mehrere Mails einfach untereinander einfügen. Das Tool erkennt automatisch wie viele Kontakte enthalten sind.</div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="analyzeMail()">Kontakte erkennen</button>
+      <button class="btn-ghost" onclick="document.getElementById('mailText').value=''">Löschen</button>
+    </div>
+  </div>
+
+  <div id="statusBar" class="status"></div>
+
+  <!-- RESULTS -->
+  <div id="results" class="results">
+    <div class="divider"></div>
+    <div class="section-title">Erkannte Daten — bitte prüfen & korrigieren</div>
+
+    <!-- Address chooser (PDF mode) -->
+    <div id="addrChooser" class="address-chooser" style="display:none;">
+      <div class="chooser-label">Mehrere Adressen gefunden — welche soll als Kontaktadresse eingetragen werden?</div>
+      <div class="addr-options" id="addrOptions"></div>
+      <div style="margin-top:10px;">
+        <button class="btn-ghost" style="font-size:13px;" onclick="applyChosenAddr()">Auswahl übernehmen →</button>
+      </div>
+    </div>
+
+    <!-- Contact cards -->
+    <div id="contactCards"></div>
+
+    <div class="btn-row">
+      <button class="btn-primary" onclick="submitAll()">In Google Sheets eintragen ↗</button>
+      <button class="btn-ghost" onclick="resetAll()">Abbrechen</button>
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div id="successScreen" class="success-screen">
+    <div class="success-icon">✓</div>
+    <div class="success-title" id="successTitle">Eingetragen!</div>
+    <div class="success-sub" id="successSub"></div>
+    <div style="margin-top:1.5rem;">
+      <button class="btn-primary" onclick="resetAll()">Neuen Kontakt anlegen</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let state = { imageBase64: null, imageType: 'image/jpeg', pdfText: null, contacts: [], chosenAddrIdx: 0 };
+
+// Config
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('scriptUrl');
+  if (saved) document.getElementById('scriptUrl').value = saved;
+});
+function saveConfig() {
+  localStorage.setItem('scriptUrl', document.getElementById('scriptUrl').value.trim());
+  showStatus('URL gespeichert', 'success');
+  setTimeout(() => hideStatus(), 2000);
+}
+
+// Tab switching
+function switchTab(t) {
+  ['foto','pdf','mail'].forEach(id => {
+    document.getElementById('panel-'+id).classList.toggle('active', id===t);
+    document.querySelectorAll('.tab')[['foto','pdf','mail'].indexOf(id)].classList.toggle('active', id===t);
+  });
+  resetAll();
+}
+
+// Drag & drop
+function dragOver(e, id) { e.preventDefault(); document.getElementById(id).classList.add('drag-over'); }
+function dragLeave(id) { document.getElementById(id).classList.remove('drag-over'); }
+function dropFile(e, mode) {
+  e.preventDefault();
+  dragLeave(mode==='foto'?'dropFoto':'dropPdf');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  if (mode==='foto') { const inp = document.getElementById('inputFoto'); const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files; loadImage(inp); }
+  else { const inp = document.getElementById('inputPdf'); const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files; loadPDF(inp); }
+}
+
+function loadImage(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.imageBase64 = e.target.result.split(',')[1];
+    state.imageType = file.type || 'image/jpeg';
+    const prev = document.getElementById('prevFoto');
+    prev.src = e.target.result; prev.style.display = 'block';
+    document.getElementById('dropFoto').classList.add('has-file');
+    document.getElementById('btnFoto').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function loadPDF(input) {
+  const file = input.files[0]; if (!file) return;
+  document.getElementById('pdfName').textContent = file.name;
+  document.getElementById('pdfBadge').style.display = 'inline-flex';
+  document.getElementById('dropPdf').classList.add('has-file');
+  showStatus('PDF wird gelesen...', 'loading');
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let text = '';
+    const pages = Math.min(pdf.numPages, 3);
+    for (let i = 1; i <= pages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(s => s.str).join(' ') + '\n';
+    }
+    state.pdfText = text;
+    hideStatus();
+    document.getElementById('btnPdf').disabled = false;
+  } catch(e) { showStatus('PDF konnte nicht gelesen werden: '+e.message, 'error'); }
+}
+
+function clearInput(mode) {
+  if (mode==='foto') { state.imageBase64=null; document.getElementById('prevFoto').style.display='none'; document.getElementById('dropFoto').classList.remove('has-file'); document.getElementById('btnFoto').disabled=true; document.getElementById('inputFoto').value=''; }
+  else { state.pdfText=null; document.getElementById('pdfBadge').style.display='none'; document.getElementById('dropPdf').classList.remove('has-file'); document.getElementById('btnPdf').disabled=true; document.getElementById('inputPdf').value=''; }
+  resetAll();
+}
+
+// Claude API call — läuft über Apps Script (API Key ist dort sicher gespeichert)
+async function callClaude(messages, system) {
+  const scriptUrl = document.getElementById('scriptUrl').value.trim() || localStorage.getItem('scriptUrl');
+  if (!scriptUrl) throw new Error('Bitte zuerst die Script URL eintragen (oben)');
+  document.getElementById('apiStatus').textContent = 'analysiert...';
+  const resp = await fetch(scriptUrl, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'claude', system, messages })
+  });
+  document.getElementById('apiStatus').textContent = 'bereit';
+  const data = await resp.json();
+  if (data.status === 'error') throw new Error(data.message);
+  return data.result;
+}
+
+const SYSTEM_CONTACT = `Du extrahierst Kontaktdaten. Antworte NUR mit reinem JSON, kein Markdown, keine Backticks.
+Format: Array von Objekten mit: Vorname, Nachname, PLZ, Ort, Strasse, Tel1, Tel2, Email, BauPLZ, Bauort, BauStrasse, Notizen.
+Leere Felder = leerer String. Notizen = kurze Zusammenfassung der Anfrage (1 Satz).`;
+
+const SYSTEM_PDF = `Du analysierst Text aus einem Bauplan-PDF. Extrahiere ALLE gefundenen Adressen/Personen (Bauherr, Baustelle, Planer, Architekt etc.).
+Antworte NUR mit reinem JSON, kein Markdown. Format: Array von Objekten mit: rolle (z.B. "Bauherr", "Baustelle", "Planer"), Vorname, Nachname, PLZ, Ort, Strasse, Tel1, Tel2, Email. Leere Felder = leerer String.`;
+
+async function analyzeImage() {
+  if (!state.imageBase64) return;
+  showStatus('Handschrift wird analysiert...', 'loading');
+  try {
+    const raw = await callClaude([{role:'user',content:[{type:'image',source:{type:'base64',media_type:state.imageType,data:state.imageBase64}},{type:'text',text:'Extrahiere alle Adress- und Kontaktdaten.'}]}], SYSTEM_CONTACT);
+    const contacts = parseJSON(raw);
+    state.contacts = contacts;
+    hideStatus();
+    renderCards(contacts);
+  } catch(e) { showStatus('Fehler: '+e.message, 'error'); }
+}
+
+async function analyzePDF() {
+  if (!state.pdfText) return;
+  showStatus('PDF-Text wird analysiert...', 'loading');
+  try {
+    const raw = await callClaude([{role:'user',content:`Hier ist der PDF-Text:\n\n${state.pdfText.substring(0,4000)}`}], SYSTEM_PDF);
+    const addresses = parseJSON(raw);
+    hideStatus();
+    if (addresses.length > 1) {
+      renderAddressChooser(addresses);
+    } else {
+      state.contacts = addresses.map(a => ({...a, Notizen:'Aus PDF importiert'}));
+      renderCards(state.contacts);
+    }
+  } catch(e) { showStatus('Fehler: '+e.message, 'error'); }
+}
+
+async function analyzeMail() {
+  const text = document.getElementById('mailText').value.trim();
+  if (!text) return;
+  showStatus('E-Mails werden analysiert...', 'loading');
+  try {
+    const raw = await callClaude([{role:'user',content:`E-Mail-Inhalt:\n\n${text}`}], SYSTEM_CONTACT);
+    const contacts = parseJSON(raw);
+    state.contacts = contacts;
+    hideStatus();
+    renderCards(contacts);
+  } catch(e) { showStatus('Fehler: '+e.message, 'error'); }
+}
+
+function parseJSON(raw) {
+  const clean = raw.replace(/```json|```/g,'').trim();
+  const parsed = JSON.parse(clean);
+  return Array.isArray(parsed) ? parsed : [parsed];
+}
+
+function renderAddressChooser(addresses) {
+  const container = document.getElementById('addrOptions');
+  container.innerHTML = '';
+  addresses.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.className = 'addr-option' + (i===0?' selected':'');
+    div.onclick = () => {
+      document.querySelectorAll('.addr-option').forEach(el=>el.classList.remove('selected'));
+      div.classList.add('selected');
+      state.chosenAddrIdx = i;
+    };
+    div.innerHTML = `<input type="radio" name="addrChoice" ${i===0?'checked':''} onchange="state.chosenAddrIdx=${i}">
+      <div class="addr-option-text">
+        <div class="addr-option-label">${a.rolle||'Adresse '+(i+1)}</div>
+        ${[a.Vorname,a.Nachname].filter(Boolean).join(' ')}<br>
+        ${[a.Strasse,a.PLZ,a.Ort].filter(Boolean).join(', ')}
+        ${a.Email?'<br>'+a.Email:''}
+      </div>`;
+    container.appendChild(div);
+  });
+  state._pdfAddresses = addresses;
+  document.getElementById('addrChooser').style.display = 'block';
+  document.getElementById('results').classList.add('show');
+}
+
+function applyChosenAddr() {
+  const chosen = state._pdfAddresses[state.chosenAddrIdx];
+  state.contacts = [{ ...chosen, Notizen: 'Aus PDF importiert — '+chosen.rolle }];
+  document.getElementById('addrChooser').style.display = 'none';
+  renderCards(state.contacts);
+}
+
+function renderCards(contacts) {
+  const container = document.getElementById('contactCards');
+  container.innerHTML = '';
+  if (contacts.length > 1) {
+    const nav = document.createElement('div');
+    nav.className = 'multi-nav';
+    nav.innerHTML = `<span style="font-size:14px;font-weight:500;">${contacts.length} Kontakte erkannt</span><span class="multi-badge">${contacts.length} gesamt</span>`;
+    container.appendChild(nav);
+  }
+  contacts.forEach((c, idx) => {
+    const card = document.createElement('div');
+    card.className = 'contact-card';
+    const ini = ((c.Vorname||'?')[0]+(c.Nachname||'?')[0]).toUpperCase();
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="avatar">${ini}</div>
+        <div>
+          <div class="card-name">${esc(c.Vorname)} ${esc(c.Nachname)}</div>
+          <div class="card-sub">${esc(c.Email||c.Tel1||c.Ort||'')}</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="field-grid">
+          <div class="field"><label>Vorname</label><input id="c${idx}_Vorname" value="${esc(c.Vorname)}"></div>
+          <div class="field"><label>Nachname</label><input id="c${idx}_Nachname" value="${esc(c.Nachname)}"></div>
+          <div class="field"><label>PLZ</label><input id="c${idx}_PLZ" value="${esc(c.PLZ)}"></div>
+          <div class="field"><label>Ort</label><input id="c${idx}_Ort" value="${esc(c.Ort)}"></div>
+          <div class="field full"><label>Straße</label><input id="c${idx}_Strasse" value="${esc(c.Strasse)}"></div>
+          <div class="field"><label>Tel 1</label><input id="c${idx}_Tel1" value="${esc(c.Tel1)}"></div>
+          <div class="field"><label>Tel 2</label><input id="c${idx}_Tel2" value="${esc(c.Tel2)}"></div>
+          <div class="field full"><label>E-Mail</label><input id="c${idx}_Email" value="${esc(c.Email)}"></div>
+          <div class="field-section">Bauadresse (falls abweichend)</div>
+          <div class="field"><label>Bau-PLZ</label><input id="c${idx}_BauPLZ" value="${esc(c.BauPLZ)}"></div>
+          <div class="field"><label>Bauort</label><input id="c${idx}_Bauort" value="${esc(c.Bauort)}"></div>
+          <div class="field full"><label>Baustraße</label><input id="c${idx}_BauStrasse" value="${esc(c.BauStrasse)}"></div>
+          <div class="field full"><label>Notizen</label><input id="c${idx}_Notizen" value="${esc(c.Notizen)}"></div>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+  document.getElementById('results').classList.add('show');
+}
+
+function getRow(idx) {
+  const f = n => (document.getElementById(`c${idx}_${n}`)||{}).value||'';
+  return [f('Vorname'),f('Nachname'),'','',f('Strasse'),f('Tel1'),f('Tel2'),f('Email'),'','','','',f('Notizen'),'','',f('Bauort'),f('BauPLZ'),f('BauStrasse')];
+}
+
+async function submitAll() {
+  const scriptUrl = document.getElementById('scriptUrl').value.trim() || localStorage.getItem('scriptUrl');
+  if (!scriptUrl) { showStatus('Bitte zuerst die Google Apps Script URL einfügen (oben)', 'error'); return; }
+  const rows = state.contacts.map((_, i) => getRow(i));
+  showStatus(`${rows.length} Kontakt(e) werden eingetragen...`, 'loading');
+  try {
+    const resp = await fetch(scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify({ rows, sheetName: 'Kontakte' })
+    });
+    const result = await resp.json();
+    if (result.status === 'ok') {
+      document.getElementById('results').classList.remove('show');
+      hideStatus();
+      document.getElementById('successTitle').textContent = rows.length === 1 ? '1 Kontakt eingetragen' : `${rows.length} Kontakte eingetragen`;
+      document.getElementById('successSub').textContent = 'Die Daten wurden erfolgreich in Google Sheets gespeichert.';
+      document.getElementById('successScreen').classList.add('show');
+    } else {
+      showStatus('Fehler vom Script: ' + (result.message||'unbekannt'), 'error');
+    }
+  } catch(e) { showStatus('Verbindungsfehler: '+e.message, 'error'); }
+}
+
+function showStatus(msg, type='loading') {
+  const bar = document.getElementById('statusBar');
+  bar.className = 'status show '+type;
+  bar.innerHTML = type==='loading' ? `<div class="spinner"></div>${msg}` : msg;
+}
+function hideStatus() { document.getElementById('statusBar').className = 'status'; }
+
+function resetAll() {
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('successScreen').classList.remove('show');
+  document.getElementById('addrChooser').style.display = 'none';
+  document.getElementById('contactCards').innerHTML = '';
+  hideStatus();
+  state.contacts = [];
+}
+
+function esc(v) { return (v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+</script>
+</body>
+</html>
