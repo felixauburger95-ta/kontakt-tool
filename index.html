@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kontakt Import">
-<title>Kontakt Import — treppen arte® | v3.0</title>
+<title>Kontakt Import — treppen arte® | v3.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -266,7 +266,7 @@ let state={imageBase64:null,imageType:'image/jpeg',pdfText:null,contacts:[],chos
 
 window.addEventListener('load',()=>{const s=localStorage.getItem('scriptUrl');if(s)document.getElementById('scriptUrl').value=s;});
 function saveConfig(){const u=document.getElementById('scriptUrl').value.trim();localStorage.setItem('scriptUrl',u);const el=document.getElementById('configSaved');el.style.display='inline';setTimeout(()=>el.style.display='none',2000);}
-const DEFAULT_URL='https://script.google.com/macros/s/AKfycbzGXa0Ih3vhRiAoe3wCtvxIQ2c2BWI_D0riU2TBQ_u5E2WXJrlsBpaghMG-0HQ300Kq/exec';
+const DEFAULT_URL='https://script.google.com/macros/s/AKfycbzbElZn4hWdijuFtEcjYgUpVxhapagFzYgy4Z-gLddseuITBPnUbSYkA8z-1nNEIl9F/exec';
 function getUrl(){return document.getElementById('scriptUrl').value.trim()||localStorage.getItem('scriptUrl')||DEFAULT_URL;}
 function switchTab(t){['foto','pdf','mail'].forEach((id,i)=>{document.getElementById('panel-'+id).classList.toggle('active',id===t);document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);});resetAll();}
 function dragOver(e,id){e.preventDefault();document.getElementById(id).classList.add('drag-over');}
