@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kontakt Import">
-<title>Kontakt Import — treppen arte® | v2.9</title>
+<title>Kontakt Import — treppen arte® | v3.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -350,18 +350,20 @@ async function submitAll(force, updateRowIndex) {
       return;
     }
 
-    // Duplikat-Check
-    const c = state.contacts[0];
-    if(c && (c.Vorname || c.Email)) {
+    // Duplikat-Check — liest aktuelle Werte aus Eingabefeldern
+    const vorname = (document.getElementById('c0_Vorname')||{}).value || (state.contacts[0]||{}).Vorname || '';
+    const nachname = (document.getElementById('c0_Nachname')||{}).value || (state.contacts[0]||{}).Nachname || '';
+    const email = (document.getElementById('c0_Email')||{}).value || (state.contacts[0]||{}).Email || '';
+    if(vorname || email) {
       showStatus('Prüfe auf Duplikate...','loading');
       try {
-        const resp = await fetch(url,{method:'POST',body:JSON.stringify({action:'checkDuplicate',Vorname:c.Vorname,Nachname:c.Nachname,Email:c.Email})});
+        const resp = await fetch(url,{method:'POST',body:JSON.stringify({action:'checkDuplicate',Vorname:vorname,Nachname:nachname,Email:email})});
         const result = await resp.json();
         hideStatus();
         if(result.status==='duplicate') {
           const ex = result.existing;
           const box = document.getElementById('missingBox');
-          box.innerHTML=`<strong>Kontakt bereits vorhanden!</strong>${ex.Vorname} ${ex.Nachname} — ${ex.PLZ} ${ex.Ort}<br><br>Was möchtest du tun?`;
+          box.innerHTML=`<strong>Kontakt bereits vorhanden!</strong><br>${ex.Vorname} ${ex.Nachname} — ${ex.PLZ} ${ex.Ort}<br><br>Was möchtest du tun?`;
           box.style.display='block';
           document.getElementById('actionBtns').innerHTML=`
             <button class="btn-primary" onclick="submitAll(false,${result.rowIndex})">Bestehenden aktualisieren</button>
