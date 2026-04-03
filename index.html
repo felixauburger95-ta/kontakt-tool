@@ -2,63 +2,106 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kontakt Import — treppen arte® | v2.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kontakt Import">
+<title>Kontakt Import — treppen arte® | v2.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   :root {
-    --bg:#F7F4EF;--surface:#FFFFFF;--surface2:#EFE9DF;--border:#DDD5C8;--border2:#C8BDB0;
-    --text:#1C1815;--text2:#6B5F54;--text3:#A89B8E;
-    --accent:#8B6914;--accent-light:#F5EDD9;--accent-text:#5A3D0A;
-    --danger:#8B2020;--danger-light:#FDF0F0;
-    --warning:#7A5C1E;--warning-light:#FDF8EE;--warning-border:#C8960A;
-    --success:#2D5A3D;--success-light:#EAF2EC;
-    --radius:10px;--radius-lg:14px;
+    --bg:#1E2D42;
+    --surface:#2C3E5C;
+    --surface2:#243350;
+    --surface3:#1A2A3E;
+    --border:rgba(255,255,255,0.1);
+    --border2:rgba(255,255,255,0.18);
+    --text:#F0F4FA;
+    --text2:#A8B8CC;
+    --text3:#6B7E96;
+    --accent:#4A7CC7;
+    --accent-dark:#2D5A9E;
+    --accent-light:rgba(74,124,199,0.15);
+    --gold:#C8960A;
+    --gold-light:rgba(200,150,10,0.15);
+    --danger:#C0392B;
+    --danger-light:rgba(192,57,43,0.15);
+    --warning:#E6A817;
+    --warning-light:rgba(230,168,23,0.15);
+    --warning-border:rgba(230,168,23,0.4);
+    --success:#27AE60;
+    --success-light:rgba(39,174,96,0.15);
+    --radius:10px;
+    --radius-lg:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-  .topbar{background:var(--text);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+
+  .topbar{background:var(--surface3);border-bottom:1px solid var(--border);padding:0 1.5rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
   .logo{display:flex;align-items:center;gap:14px;}
-  .logo-name{font-family:'Playfair Display',serif;font-size:17px;color:#F7F4EF;letter-spacing:0.5px;}
-  .logo-tag{font-size:10px;color:#C8960A;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
-  .logo-divider{width:1px;height:26px;background:rgba(255,255,255,0.12);}
-  .logo-tool{font-size:12px;color:rgba(255,255,255,0.4);}
-  .api-status{font-size:11px;color:rgba(255,255,255,0.3);font-family:'DM Mono',monospace;}
-  .main{max-width:720px;margin:0 auto;padding:2.5rem 1.5rem 4rem;}
-  .section-title{font-size:11px;font-weight:500;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:1rem;}
-  .config-bar{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:2rem;}
+  .logo-mark{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+  .logo-mark svg{width:18px;height:18px;fill:#fff;}
+  .logo-text{}
+  .logo-name{font-family:'Playfair Display',serif;font-size:15px;color:var(--text);letter-spacing:0.3px;line-height:1.2;}
+  .logo-sub{font-size:10px;color:var(--gold);font-weight:500;letter-spacing:1.5px;text-transform:uppercase;}
+  .logo-divider{width:1px;height:28px;background:var(--border2);}
+  .logo-tool{font-size:12px;color:var(--text3);}
+  .api-status{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+
+  .main{max-width:680px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+
+  .section-title{font-size:11px;font-weight:500;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:0.75rem;}
+
+  .config-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:1.75rem;}
   .config-bar label{font-size:12px;color:var(--text3);white-space:nowrap;}
-  .config-bar input{flex:1;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text);background:var(--bg);}
+  .config-bar input{flex:1;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text);background:var(--surface2);min-width:0;}
   .config-bar input:focus{outline:none;border-color:var(--accent);}
   .config-saved{font-size:11px;color:var(--success);display:none;white-space:nowrap;}
-  .tabs{display:flex;background:var(--surface2);border-radius:var(--radius);padding:4px;gap:4px;margin-bottom:1.5rem;}
-  .tab{flex:1;padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400;background:transparent;border:none;border-radius:7px;cursor:pointer;color:var(--text2);transition:all 0.15s;}
-  .tab.active{background:var(--surface);color:var(--text);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+
+  .tabs{display:flex;background:var(--surface3);border-radius:var(--radius);padding:4px;gap:4px;margin-bottom:1.5rem;border:1px solid var(--border);}
+  .tab{flex:1;padding:10px 8px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400;background:transparent;border:none;border-radius:7px;cursor:pointer;color:var(--text2);transition:all 0.15s;}
+  .tab.active{background:var(--accent);color:#fff;font-weight:500;}
+  .tab:hover:not(.active){color:var(--text);background:var(--surface);}
+
   .panel{display:none;}.panel.active{display:block;}
+
   .drop-zone{border:1.5px dashed var(--border2);border-radius:var(--radius-lg);padding:2.5rem 2rem;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--surface);}
   .drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:var(--accent-light);}
   .drop-zone.has-file{border-style:solid;border-color:var(--accent);background:var(--accent-light);}
-  .drop-icon{font-size:28px;margin-bottom:12px;}.drop-title{font-size:14px;font-weight:500;margin-bottom:4px;}.drop-sub{font-size:12px;color:var(--text3);}
+  .drop-icon{font-size:32px;margin-bottom:12px;}
+  .drop-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px;}
+  .drop-sub{font-size:12px;color:var(--text3);}
   input[type=file]{display:none;}
-  .preview-img{max-width:100%;max-height:200px;border-radius:var(--radius);border:1px solid var(--border);margin-top:1rem;object-fit:contain;}
-  .pdf-badge{display:inline-flex;align-items:center;gap:6px;margin-top:1rem;background:var(--warning-light);color:var(--warning);font-size:12px;padding:6px 12px;border-radius:20px;font-weight:500;}
-  textarea{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);resize:vertical;min-height:160px;line-height:1.6;transition:border-color 0.15s;}
+  .preview-img{max-width:100%;max-height:180px;border-radius:var(--radius);border:1px solid var(--border);margin-top:1rem;object-fit:contain;}
+  .pdf-badge{display:inline-flex;align-items:center;gap:6px;margin-top:1rem;background:var(--warning-light);color:var(--warning);font-size:12px;padding:6px 12px;border-radius:20px;font-weight:500;border:1px solid var(--warning-border);}
+
+  textarea{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);resize:vertical;min-height:160px;line-height:1.6;transition:border-color 0.15s;}
   textarea:focus{outline:none;border-color:var(--accent);}
-  .hint-box{background:var(--surface2);border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--text2);margin-top:10px;line-height:1.6;}
+  textarea::placeholder{color:var(--text3);}
+  .hint-box{background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--text3);margin-top:10px;line-height:1.6;}
+
   .btn-row{display:flex;gap:10px;margin-top:1.25rem;flex-wrap:wrap;}
   .btn-primary{background:var(--accent);color:#fff;border:none;padding:11px 22px;border-radius:var(--radius);font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity 0.15s;display:flex;align-items:center;gap:8px;}
-  .btn-primary:hover{opacity:0.88;}.btn-primary:disabled{opacity:0.35;cursor:not-allowed;}
+  .btn-primary:hover{opacity:0.88;}
+  .btn-primary:disabled{opacity:0.35;cursor:not-allowed;}
   .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);padding:11px 18px;border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;}
-  .btn-ghost:hover{background:var(--surface2);color:var(--text);}
+  .btn-ghost:hover{background:var(--surface);color:var(--text);}
   .btn-warning{background:var(--warning-light);color:var(--warning);border:1px solid var(--warning-border);padding:11px 18px;border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;}
+
   .status{display:none;padding:12px 16px;border-radius:var(--radius);font-size:13px;margin-top:1.25rem;align-items:center;gap:10px;}
-  .status.show{display:flex;}.status.loading{background:var(--surface2);color:var(--text2);}.status.success{background:var(--success-light);color:var(--success);}.status.error{background:var(--danger-light);color:var(--danger);}
+  .status.show{display:flex;}
+  .status.loading{background:var(--surface);color:var(--text2);border:1px solid var(--border);}
+  .status.success{background:var(--success-light);color:var(--success);border:1px solid rgba(39,174,96,0.3);}
+  .status.error{background:var(--danger-light);color:#E74C3C;border:1px solid rgba(192,57,43,0.3);}
   .spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
   @keyframes spin{to{transform:rotate(360deg);}}
+
   .divider{height:1px;background:var(--border);margin:2rem 0;}
+
   .results{display:none;}.results.show{display:block;}
+
   .address-chooser{margin-bottom:1.5rem;}
   .chooser-label{font-size:13px;color:var(--text2);margin-bottom:10px;}
   .addr-options{display:flex;flex-direction:column;gap:8px;}
@@ -66,65 +109,95 @@
   .addr-option:hover{border-color:var(--border2);background:var(--surface2);}
   .addr-option.selected{border-color:var(--accent);background:var(--accent-light);}
   .addr-option input[type=radio]{margin-top:2px;accent-color:var(--accent);}
-  .addr-option-text{font-size:13px;line-height:1.6;}
-  .addr-option-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;}
+  .addr-option-text{font-size:13px;line-height:1.6;color:var(--text2);}
+  .addr-option-label{font-size:11px;font-weight:500;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;}
+
   .contact-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.25rem;}
-  .card-header{background:var(--text);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+  .card-header{background:var(--surface3);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
   .card-header-left{display:flex;align-items:center;gap:12px;}
   .avatar{width:38px;height:38px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:500;font-size:13px;color:#fff;flex-shrink:0;}
-  .card-name{font-weight:500;font-size:15px;color:#fff;}
-  .card-sub{font-size:12px;color:rgba(255,255,255,0.4);margin-top:1px;}
+  .card-name{font-weight:500;font-size:15px;color:var(--text);}
+  .card-sub{font-size:12px;color:var(--text3);margin-top:1px;}
   .completeness-pill{font-size:11px;font-family:'DM Mono',monospace;padding:4px 10px;border-radius:20px;}
-  .pill-ok{background:rgba(45,90,61,0.35);color:#7ED4A0;}
-  .pill-warn{background:rgba(200,150,10,0.3);color:#F0C060;}
-  .pill-bad{background:rgba(139,32,32,0.3);color:#F09090;}
+  .pill-ok{background:rgba(39,174,96,0.2);color:#2ECC71;border:1px solid rgba(39,174,96,0.3);}
+  .pill-warn{background:rgba(230,168,23,0.2);color:#F1C40F;border:1px solid rgba(230,168,23,0.3);}
+  .pill-bad{background:rgba(192,57,43,0.2);color:#E74C3C;border:1px solid rgba(192,57,43,0.3);}
   .card-body{padding:16px 18px;}
   .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .field.full{grid-column:1/-1;}
   .field label{display:block;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px;}
   .field label .req{color:var(--danger);margin-left:2px;font-size:10px;}
-  .field input{width:100%;border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--bg);transition:all 0.15s;}
-  .field input:focus{outline:none;border-color:var(--accent);background:var(--surface);}
-  .field-section{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;padding:12px 0 8px;border-top:1px solid var(--border);margin-top:8px;grid-column:1/-1;}
+  .field input{width:100%;border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface2);transition:all 0.15s;}
+  .field input:focus{outline:none;border-color:var(--accent);background:var(--surface3);}
+  .field input::placeholder{color:var(--text3);}
+  .field-section{font-size:11px;font-weight:500;color:var(--accent);text-transform:uppercase;letter-spacing:0.6px;padding:12px 0 8px;border-top:1px solid var(--border);margin-top:8px;grid-column:1/-1;}
+
   .missing-box{background:var(--warning-light);border:1px solid var(--warning-border);border-radius:var(--radius);padding:14px 16px;margin:1rem 0;font-size:13px;color:var(--warning);line-height:1.8;}
   .missing-box strong{font-weight:500;display:block;margin-bottom:6px;}
+
   .multi-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
-  .multi-badge{font-size:12px;font-family:'DM Mono',monospace;color:var(--text3);background:var(--surface2);padding:4px 10px;border-radius:20px;}
+  .multi-badge{font-size:12px;font-family:'DM Mono',monospace;color:var(--text3);background:var(--surface3);padding:4px 10px;border-radius:20px;border:1px solid var(--border);}
+
   .success-screen{display:none;text-align:center;padding:3rem 1rem;}
   .success-screen.show{display:block;}
-  .success-icon{width:56px;height:56px;background:var(--success-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:22px;}
-  .success-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;margin-bottom:8px;}
+  .success-icon{width:60px;height:60px;background:var(--success-light);border:2px solid rgba(39,174,96,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:24px;}
+  .success-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;margin-bottom:8px;color:var(--text);}
   .success-sub{font-size:14px;color:var(--text2);}
-  @media(max-width:520px){.field-grid{grid-template-columns:1fr;}.field.full{grid-column:1;}.main{padding:1.5rem 1rem 3rem;}}
+
+  @media(max-width:600px){
+    .field-grid{grid-template-columns:1fr;}
+    .field.full{grid-column:1;}
+    .main{padding:1rem 0.75rem 5rem;}
+    .topbar{padding:0 1rem;height:52px;}
+    .logo-sub,.logo-divider,.logo-tool{display:none;}
+    .tabs{gap:2px;}
+    .tab{padding:9px 4px;font-size:12px;}
+    .drop-zone{padding:1.5rem 1rem;}
+    .btn-row{gap:8px;}
+    .btn-primary,.btn-ghost,.btn-warning{padding:13px 16px;font-size:14px;width:100%;justify-content:center;}
+    .card-body{padding:12px 14px;}
+    input,textarea,select{font-size:16px !important;}
+    .config-bar{flex-wrap:wrap;}
+    .config-bar input{width:100%;}
+  }
 </style>
 </head>
 <body>
 <div class="topbar">
   <div class="logo">
-    <div><div class="logo-name">treppen arte®</div><div class="logo-tag">auburger</div></div>
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M3 20h18v-2H3v2zm2-4h14l-7-12-7 12z"/></svg>
+    </div>
+    <div class="logo-text">
+      <div class="logo-name">treppen arte®</div>
+      <div class="logo-sub">auburger</div>
+    </div>
     <div class="logo-divider"></div>
     <div class="logo-tool">Kontakt Import</div>
   </div>
   <div class="api-status" id="apiStatus">bereit</div>
 </div>
+
 <div class="main">
   <div class="config-bar">
     <label>Script URL:</label>
     <input type="text" id="scriptUrl" placeholder="Google Apps Script URL...">
-    <span class="config-saved" id="configSaved">✓ gespeichert</span>
-    <button class="btn-ghost" style="padding:6px 14px;font-size:12px;white-space:nowrap;" onclick="saveConfig()">Speichern</button>
+    <span class="config-saved" id="configSaved">✓</span>
+    <button class="btn-ghost" style="padding:7px 14px;font-size:12px;white-space:nowrap;" onclick="saveConfig()">Speichern</button>
   </div>
+
   <div class="section-title">Eingabe</div>
   <div class="tabs">
     <button class="tab active" onclick="switchTab('foto')">📷 Foto</button>
     <button class="tab" onclick="switchTab('pdf')">📄 PDF-Plan</button>
     <button class="tab" onclick="switchTab('mail')">✉️ E-Mail</button>
   </div>
+
   <div id="panel-foto" class="panel active">
     <div class="drop-zone" id="dropFoto" onclick="document.getElementById('inputFoto').click()" ondragover="dragOver(event,'dropFoto')" ondragleave="dragLeave('dropFoto')" ondrop="dropFile(event,'foto')">
       <div class="drop-icon">📷</div>
       <div class="drop-title">Foto hochladen</div>
-      <div class="drop-sub">Handschriftliche Adresse, Visitenkarte, Briefkopf — JPG, PNG, HEIC</div>
+      <div class="drop-sub">Handschriftliche Adresse, Visitenkarte, Briefkopf</div>
       <img id="prevFoto" class="preview-img" style="display:none;">
     </div>
     <input type="file" id="inputFoto" accept="image/*" onchange="loadImage(this)">
@@ -133,6 +206,7 @@
       <button class="btn-ghost" onclick="clearInput('foto')">Löschen</button>
     </div>
   </div>
+
   <div id="panel-pdf" class="panel">
     <div class="drop-zone" id="dropPdf" onclick="document.getElementById('inputPdf').click()" ondragover="dragOver(event,'dropPdf')" ondragleave="dragLeave('dropPdf')" ondrop="dropFile(event,'pdf')">
       <div class="drop-icon">📄</div>
@@ -141,26 +215,29 @@
       <div id="pdfBadge" style="display:none;" class="pdf-badge">📎 <span id="pdfName"></span></div>
     </div>
     <input type="file" id="inputPdf" accept="application/pdf" onchange="loadPDF(this)">
-    <div class="hint-box">Bauherr und Bauort werden aus dem Titelblock erkannt. Nachbarn, Behörden und Entwurfsverfasser werden ignoriert.</div>
+    <div class="hint-box">Bauherr und Bauort werden aus dem Titelblock erkannt. Nachbarn und Entwurfsverfasser werden ignoriert.</div>
     <div class="btn-row">
       <button class="btn-primary" id="btnPdf" onclick="analyzePDF()" disabled>Adressen erkennen</button>
       <button class="btn-ghost" onclick="clearInput('pdf')">Löschen</button>
     </div>
   </div>
+
   <div id="panel-mail" class="panel">
-    <textarea id="mailText" placeholder="E-Mail(s) hier einfügen — auch mehrere nacheinander. Name, Adresse, Telefon und E-Mail werden automatisch erkannt..."></textarea>
-    <div class="hint-box">Tipp: Mehrere Mails einfach untereinander einfügen. Das Tool erkennt automatisch wie viele Kontakte enthalten sind.</div>
+    <textarea id="mailText" placeholder="E-Mail(s) hier einfügen — auch mehrere nacheinander..."></textarea>
+    <div class="hint-box">Mehrere Mails einfach untereinander einfügen. Das Tool erkennt automatisch wie viele Kontakte enthalten sind.</div>
     <div class="btn-row">
       <button class="btn-primary" onclick="analyzeMail()">Kontakte erkennen</button>
       <button class="btn-ghost" onclick="document.getElementById('mailText').value=''">Löschen</button>
     </div>
   </div>
+
   <div id="statusBar" class="status"></div>
+
   <div id="results" class="results">
     <div class="divider"></div>
     <div class="section-title">Erkannte Daten — bitte prüfen & korrigieren</div>
     <div id="addrChooser" class="address-chooser" style="display:none;">
-      <div class="chooser-label">Mehrere Adressen gefunden — welche soll als Kontaktadresse eingetragen werden?</div>
+      <div class="chooser-label">Mehrere Adressen gefunden — welche soll eingetragen werden?</div>
       <div class="addr-options" id="addrOptions"></div>
       <div style="margin-top:10px;"><button class="btn-ghost" style="font-size:13px;" onclick="applyChosenAddr()">Auswahl übernehmen →</button></div>
     </div>
@@ -171,6 +248,7 @@
       <button class="btn-ghost" onclick="resetAll()">Abbrechen</button>
     </div>
   </div>
+
   <div id="successScreen" class="success-screen">
     <div class="success-icon">✓</div>
     <div class="success-title" id="successTitle">Eingetragen!</div>
@@ -178,15 +256,18 @@
     <div style="margin-top:1.5rem;"><button class="btn-primary" onclick="resetAll()">Neuen Kontakt anlegen</button></div>
   </div>
 </div>
+
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const PFLICHT=['Vorname','Nachname','PLZ','Ort'];
 const PFLICHT_EINS=['Tel1','Email'];
 const SOFT=['Bauort','BauPLZ','BauStrasse'];
 let state={imageBase64:null,imageType:'image/jpeg',pdfText:null,contacts:[],chosenAddrIdx:0};
+
 window.addEventListener('load',()=>{const s=localStorage.getItem('scriptUrl');if(s)document.getElementById('scriptUrl').value=s;});
 function saveConfig(){const u=document.getElementById('scriptUrl').value.trim();localStorage.setItem('scriptUrl',u);const el=document.getElementById('configSaved');el.style.display='inline';setTimeout(()=>el.style.display='none',2000);}
-function getUrl(){return document.getElementById('scriptUrl').value.trim()||localStorage.getItem('scriptUrl')||'';}
+const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwIjDPu3Q3jhmgCn7UG9O5IUnAxwhozuMP9JwlQXIAuo6Gfu_YkSayguSfQqjEMafaB/exec';
+function getUrl(){return document.getElementById('scriptUrl').value.trim()||localStorage.getItem('scriptUrl')||DEFAULT_URL;}
 function switchTab(t){['foto','pdf','mail'].forEach((id,i)=>{document.getElementById('panel-'+id).classList.toggle('active',id===t);document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);});resetAll();}
 function dragOver(e,id){e.preventDefault();document.getElementById(id).classList.add('drag-over');}
 function dragLeave(id){document.getElementById(id).classList.remove('drag-over');}
@@ -195,15 +276,29 @@ function loadImage(input){const file=input.files[0];if(!file)return;const r=new 
 async function loadPDF(input){const file=input.files[0];if(!file)return;document.getElementById('pdfName').textContent=file.name;document.getElementById('pdfBadge').style.display='inline-flex';document.getElementById('dropPdf').classList.add('has-file');showStatus('PDF wird gelesen...','loading');try{const ab=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:ab}).promise;let text='';for(let i=1;i<=Math.min(pdf.numPages,3);i++){const page=await pdf.getPage(i);const content=await page.getTextContent();text+=content.items.map(s=>s.str).join(' ')+'\n';}state.pdfText=text;hideStatus();document.getElementById('btnPdf').disabled=false;}catch(e){showStatus('PDF Fehler: '+e.message,'error');}}
 function clearInput(mode){if(mode==='foto'){state.imageBase64=null;document.getElementById('prevFoto').style.display='none';document.getElementById('dropFoto').classList.remove('has-file');document.getElementById('btnFoto').disabled=true;document.getElementById('inputFoto').value='';}else{state.pdfText=null;document.getElementById('pdfBadge').style.display='none';document.getElementById('dropPdf').classList.remove('has-file');document.getElementById('btnPdf').disabled=true;document.getElementById('inputPdf').value='';}resetAll();}
 async function callClaude(messages,system){const url=getUrl();if(!url)throw new Error('Bitte Script URL eintragen');document.getElementById('apiStatus').textContent='analysiert...';const resp=await fetch(url,{method:'POST',body:JSON.stringify({action:'claude',system,messages})});document.getElementById('apiStatus').textContent='bereit';const data=await resp.json();if(data.status==='error')throw new Error(data.message);return data.result;}
-const SYS_CONTACT=`Du extrahierst Kontaktdaten. Antworte NUR mit reinem JSON-Array, kein Markdown.
+const SYS_CONTACT=`Du extrahierst Kontaktdaten aus E-Mails für ein Treppenbauunternehmen.
+Antworte NUR mit reinem JSON-Array, kein Markdown.
 Format: [{"Vorname":"","Nachname":"","PLZ":"","Ort":"","Strasse":"","Tel1":"","Tel2":"","Email":"","BauPLZ":"","Bauort":"","BauStrasse":"","Notizen":""}]
-Notizen=kurze Zusammenfassung der Anfrage. Leere Felder=leerer String.`;
+
+WICHTIGSTE REGELN:
+- Vorname + Nachname = der Bauherr / die Bauherrin (wer zahlt, wer Eigentümer ist)
+- Wenn zwei Personen als Bauherren (Ehepaar/Paar): erste Person in Vorname/Nachname, zweite in Notizen als "Partner: [Vorname Nachname]"
+- Wenn Architekt/Planer schreibt aber Bauherr genannt: Bauherr in Vorname/Nachname, Architekt in Notizen als "Ansprechpartner: [Name]"
+- Wenn unklar wer Bauherr: Absender nehmen und in Notizen vermerken
+- Telefonnummern IMMER extrahieren — auch mitten im Text: "Meine Nummer: 0171 4234320"
+- Tel1 = erste Nummer, Tel2 = zweite falls vorhanden
+- Email = Absender-Email
+- Notizen = 1 Satz Zusammenfassung + Partner falls vorhanden + Ansprechpartner falls abweichend
+- Leere Felder = leerer String`;
 const SYS_PDF=`Du analysierst den Titelblock eines deutschen Bauplans.
 EXTRAHIERE NUR: 1. Bauherr (bei "Bauherr:","BAUHERR:","Auftraggeber:") 2. Bauort (Baustellen-Adresse)
 IGNORIERE: Nachbarn, Behörden, Entwurfsverfasser, Planer, Architekten, Ingenieurbüros.
-REGELN: Entwurfsverfasser=Planer→NIEMALS Bauherr. Kein Bauherr gefunden→leere Felder.
+REGELN:
+- Entwurfsverfasser=Planer→NIEMALS Bauherr
+- Kein Bauherr gefunden→leere Felder aber Bauort trotzdem eintragen
+- Notizen = "Bauherr: [Vorname Nachname]" damit der Name immer sichtbar ist
 Antworte NUR mit reinem JSON-Array:
-[{"rolle":"Bauherr","Vorname":"","Nachname":"","PLZ":"","Ort":"","Strasse":"","Tel1":"","Tel2":"","Email":"","BauPLZ":"","Bauort":"","BauStrasse":""}]`;
+[{"rolle":"Bauherr","Vorname":"","Nachname":"","PLZ":"","Ort":"","Strasse":"","Tel1":"","Tel2":"","Email":"","BauPLZ":"","Bauort":"","BauStrasse":"","Notizen":""}]`;
 async function analyzeImage(){if(!state.imageBase64)return;showStatus('Handschrift wird analysiert...','loading');try{const raw=await callClaude([{role:'user',content:[{type:'image',source:{type:'base64',media_type:state.imageType,data:state.imageBase64}},{type:'text',text:'Extrahiere alle Kontaktdaten.'}]}],SYS_CONTACT);state.contacts=parseJSON(raw);hideStatus();renderCards(state.contacts);}catch(e){showStatus('Fehler: '+e.message,'error');}}
 async function analyzePDF(){if(!state.pdfText)return;showStatus('Titelblock wird analysiert...','loading');try{const raw=await callClaude([{role:'user',content:'PDF-Text:\n\n'+state.pdfText.substring(0,5000)}],SYS_PDF);const addresses=parseJSON(raw);hideStatus();const valid=addresses.filter(a=>a.Vorname||a.Nachname||a.Bauort||a.BauStrasse);if(valid.length>1){renderAddressChooser(valid);}else{state.contacts=valid.map(a=>({...a,Notizen:'Aus PDF importiert'}));renderCards(state.contacts);}}catch(e){showStatus('Fehler: '+e.message,'error');}}
 async function analyzeMail(){const text=document.getElementById('mailText').value.trim();if(!text)return;showStatus('E-Mails werden analysiert...','loading');try{const raw=await callClaude([{role:'user',content:'E-Mail:\n\n'+text}],SYS_CONTACT);state.contacts=parseJSON(raw);hideStatus();renderCards(state.contacts);}catch(e){showStatus('Fehler: '+e.message,'error');}}
@@ -214,7 +309,14 @@ function score(idx){const f=n=>(document.getElementById('c'+idx+'_'+n)||{}).valu
 function updatePill(idx){const s=score(idx);const p=document.getElementById('pill'+idx);if(!p)return;p.textContent=s+'%';p.className='completeness-pill '+(s>=80?'pill-ok':s>=50?'pill-warn':'pill-bad');}
 function renderCards(contacts){const container=document.getElementById('contactCards');container.innerHTML='';if(contacts.length>1){const nav=document.createElement('div');nav.className='multi-nav';nav.innerHTML=`<span style="font-size:14px;font-weight:500;">${contacts.length} Kontakte erkannt</span><span class="multi-badge">${contacts.length} gesamt</span>`;container.appendChild(nav);}contacts.forEach((c,idx)=>{const card=document.createElement('div');card.className='contact-card';const ini=((c.Vorname||'?')[0]+(c.Nachname||'?')[0]).toUpperCase();card.innerHTML=`<div class="card-header"><div class="card-header-left"><div class="avatar">${ini}</div><div><div class="card-name">${esc(c.Vorname||'')} ${esc(c.Nachname||'')}</div><div class="card-sub">${esc(c.Email||c.Tel1||c.Ort||'')}</div></div></div><div class="completeness-pill pill-warn" id="pill${idx}">–%</div></div><div class="card-body"><div class="field-grid"><div class="field"><label>Vorname <span class="req">*</span></label><input id="c${idx}_Vorname" value="${esc(c.Vorname)}" oninput="updatePill(${idx})"></div><div class="field"><label>Nachname <span class="req">*</span></label><input id="c${idx}_Nachname" value="${esc(c.Nachname)}" oninput="updatePill(${idx})"></div><div class="field"><label>PLZ <span class="req">*</span></label><input id="c${idx}_PLZ" value="${esc(c.PLZ)}" oninput="updatePill(${idx})"></div><div class="field"><label>Ort <span class="req">*</span></label><input id="c${idx}_Ort" value="${esc(c.Ort)}" oninput="updatePill(${idx})"></div><div class="field full"><label>Straße</label><input id="c${idx}_Strasse" value="${esc(c.Strasse)}" oninput="updatePill(${idx})"></div><div class="field"><label>Tel 1</label><input id="c${idx}_Tel1" value="${esc(c.Tel1)}" oninput="updatePill(${idx})"></div><div class="field"><label>Tel 2</label><input id="c${idx}_Tel2" value="${esc(c.Tel2)}"></div><div class="field full"><label>E-Mail</label><input id="c${idx}_Email" value="${esc(c.Email)}" oninput="updatePill(${idx})"></div><div class="field-section">Bauadresse</div><div class="field"><label>Bau-PLZ</label><input id="c${idx}_BauPLZ" value="${esc(c.BauPLZ)}" oninput="updatePill(${idx})"></div><div class="field"><label>Bauort</label><input id="c${idx}_Bauort" value="${esc(c.Bauort)}" oninput="updatePill(${idx})"></div><div class="field full"><label>Baustraße</label><input id="c${idx}_BauStrasse" value="${esc(c.BauStrasse)}" oninput="updatePill(${idx})"></div><div class="field full"><label>Notizen</label><input id="c${idx}_Notizen" value="${esc(c.Notizen)}"></div></div></div>`;container.appendChild(card);setTimeout(()=>updatePill(idx),50);});document.getElementById('results').classList.add('show');document.getElementById('missingBox').style.display='none';resetBtns();}
 function getMissing(idx){const f=n=>(document.getElementById('c'+idx+'_'+n)||{}).value||'';const hard=PFLICHT.filter(n=>!f(n));const einsOk=PFLICHT_EINS.some(n=>f(n));const soft=SOFT.filter(n=>!f(n));const msgs=[];if(hard.length)msgs.push('Pflichtfelder fehlen: '+hard.join(', '));if(!einsOk)msgs.push('Tel 1 oder E-Mail fehlt');if(soft.length)msgs.push('Bauadresse unvollständig: '+soft.join(', '));return msgs;}
-function getRow(idx){const f=n=>(document.getElementById('c'+idx+'_'+n)||{}).value||'';return[f('Vorname'),f('Nachname'),f('PLZ'),f('Ort'),f('Strasse'),f('Tel1'),f('Tel2'),f('Email'),f('Notizen'),'','','','','',f('Bauort'),f('BauPLZ'),f('BauStrasse')];}
+function getRow(idx){
+  const f=n=>(document.getElementById('c'+idx+'_'+n)||{}).value||'';
+  const now=new Date();
+  const datum=now.toLocaleDateString('de-DE')+' '+now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  const notizen=[f('Notizen'),'Anfrage: '+datum].filter(Boolean).join(' | ');
+  // A-Q + R=Anfragedatum
+  return[f('Vorname'),f('Nachname'),f('PLZ'),f('Ort'),f('Strasse'),f('Tel1'),f('Tel2'),f('Email'),notizen,'','','','','',f('Bauort'),f('BauPLZ'),f('BauStrasse'),datum];
+}
 async function submitAll(force){const url=getUrl();if(!url){showStatus('Bitte Script URL eintragen','error');return;}if(!force){const missing=state.contacts.flatMap((_,i)=>getMissing(i));if(missing.length>0){const box=document.getElementById('missingBox');box.innerHTML='<strong>Fehlende Felder — bitte prüfen:</strong>'+missing.map(m=>'• '+m).join('<br>');box.style.display='block';document.getElementById('actionBtns').innerHTML=`<button class="btn-warning" onclick="submitAll(true)">Trotzdem eintragen</button><button class="btn-primary" onclick="document.getElementById('missingBox').style.display='none';resetBtns()">Weiter ergänzen</button><button class="btn-ghost" onclick="resetAll()">Abbrechen</button>`;return;}}const rows=state.contacts.map((_,i)=>getRow(i));showStatus(rows.length+' Kontakt(e) werden eingetragen...','loading');try{const resp=await fetch(url,{method:'POST',body:JSON.stringify({rows,sheetName:'Kontakte'})});const result=await resp.json();if(result.status==='ok'){document.getElementById('results').classList.remove('show');hideStatus();document.getElementById('successTitle').textContent=rows.length===1?'1 Kontakt eingetragen':rows.length+' Kontakte eingetragen';document.getElementById('successSub').textContent='Die Daten wurden erfolgreich in Google Sheets gespeichert.';document.getElementById('successScreen').classList.add('show');}else{showStatus('Fehler: '+(result.message||'unbekannt'),'error');}}catch(e){showStatus('Verbindungsfehler: '+e.message,'error');}}
 function resetBtns(){document.getElementById('actionBtns').innerHTML=`<button class="btn-primary" onclick="submitAll(false)">In Google Sheets eintragen ↗</button><button class="btn-ghost" onclick="resetAll()">Abbrechen</button>`;}
 function showStatus(msg,type='loading'){const b=document.getElementById('statusBar');b.className='status show '+type;b.innerHTML=type==='loading'?`<div class="spinner"></div>${msg}`:msg;}
