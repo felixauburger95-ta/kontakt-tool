@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kontakt Import">
-<title>Kontakt Import — treppen arte® | v3.2</title>
+<title>Kontakt Import — treppen arte® | v3.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -45,7 +45,7 @@
   .logo-mark svg{width:18px;height:18px;fill:#fff;}
   .logo-text{}
   .logo-name{font-family:'Playfair Display',serif;font-size:15px;color:var(--text);letter-spacing:0.3px;line-height:1.2;}
-  .logo-sub{font-size:10px;color:var(--gold);font-weight:500;letter-spacing:1.5px;text-transform:uppercase;}
+  .logo-sub{font-size:10px;color:var(--gold);font-weight:500;letter-spacing:1.5px;text-transform:none;}
   .logo-divider{width:1px;height:28px;background:var(--border2);}
   .logo-tool{font-size:12px;color:var(--text3);}
   .api-status{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
@@ -175,7 +175,10 @@
     <div class="logo-divider"></div>
     <div class="logo-tool">Kontakt Import</div>
   </div>
-  <div class="api-status" id="apiStatus">bereit</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="api-status" id="apiStatus"></div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.3);font-family:'DM Mono',monospace;">v3.3</div>
+  </div>
 </div>
 
 <div class="main">
@@ -317,7 +320,7 @@ function getRow(idx){
   // A-Q + R=Anfragedatum
   return[f('Vorname'),f('Nachname'),f('PLZ'),f('Ort'),f('Strasse'),f('Tel1'),f('Tel2'),f('Email'),notizen,'','','','','',f('Bauort'),f('BauPLZ'),f('BauStrasse'),datum];
 }
-async function submitAll(force, updateRowIndex) {
+async function submitAll(force, updateRowIndex, skipDuplicateCheck) {
   const url = getUrl();
   if(!url){showStatus('Bitte Script URL eintragen','error');return;}
 
@@ -339,8 +342,8 @@ async function submitAll(force, updateRowIndex) {
     return;
   }
 
+  // Pflichtfeld-Check — nur wenn nicht force
   if(!force){
-    // Pflichtfeld-Check
     const missing=state.contacts.flatMap((_,i)=>getMissing(i));
     if(missing.length>0){
       const box=document.getElementById('missingBox');
@@ -349,30 +352,30 @@ async function submitAll(force, updateRowIndex) {
       document.getElementById('actionBtns').innerHTML=`<button class="btn-warning" onclick="submitAll(true)">Trotzdem eintragen</button><button class="btn-primary" onclick="document.getElementById('missingBox').style.display='none';resetBtns()">Weiter ergänzen</button><button class="btn-ghost" onclick="resetAll()">Abbrechen</button>`;
       return;
     }
+  }
 
-    // Duplikat-Check — liest aktuelle Werte aus Eingabefeldern
-    const vorname = (document.getElementById('c0_Vorname')||{}).value || (state.contacts[0]||{}).Vorname || '';
-    const nachname = (document.getElementById('c0_Nachname')||{}).value || (state.contacts[0]||{}).Nachname || '';
-    const email = (document.getElementById('c0_Email')||{}).value || (state.contacts[0]||{}).Email || '';
-    if(vorname || email) {
-      showStatus('Prüfe auf Duplikate...','loading');
-      try {
-        const resp = await fetch(url,{method:'POST',body:JSON.stringify({action:'checkDuplicate',Vorname:vorname,Nachname:nachname,Email:email})});
-        const result = await resp.json();
-        hideStatus();
-        if(result.status==='duplicate') {
-          const ex = result.existing;
-          const box = document.getElementById('missingBox');
-          box.innerHTML=`<strong>Kontakt bereits vorhanden!</strong><br>${ex.Vorname} ${ex.Nachname} — ${ex.PLZ} ${ex.Ort}<br><br>Was möchtest du tun?`;
-          box.style.display='block';
-          document.getElementById('actionBtns').innerHTML=`
-            <button class="btn-primary" onclick="submitAll(false,${result.rowIndex})">Bestehenden aktualisieren</button>
-            <button class="btn-warning" onclick="submitAll(true)">Neu anlegen</button>
-            <button class="btn-ghost" onclick="resetAll()">Abbrechen</button>`;
-          return;
-        }
-      } catch(e){ hideStatus(); }
-    }
+  // Duplikat-Check — läuft IMMER, auch bei force
+  const vorname = (document.getElementById('c0_Vorname')||{}).value || (state.contacts[0]||{}).Vorname || '';
+  const nachname = (document.getElementById('c0_Nachname')||{}).value || (state.contacts[0]||{}).Nachname || '';
+  const email = (document.getElementById('c0_Email')||{}).value || (state.contacts[0]||{}).Email || '';
+  if(!updateRowIndex && !skipDuplicateCheck && (vorname || email)) {
+    showStatus('Prüfe auf Duplikate...','loading');
+    try {
+      const resp = await fetch(url,{method:'POST',body:JSON.stringify({action:'checkDuplicate',Vorname:vorname,Nachname:nachname,Email:email})});
+      const result = await resp.json();
+      hideStatus();
+      if(result.status==='duplicate') {
+        const ex = result.existing;
+        const box = document.getElementById('missingBox');
+        box.innerHTML=`<strong>Kontakt bereits vorhanden!</strong><br>${ex.Vorname} ${ex.Nachname} — ${ex.PLZ} ${ex.Ort}<br><br>Was möchtest du tun?`;
+        box.style.display='block';
+        document.getElementById('actionBtns').innerHTML=`
+          <button class="btn-primary" onclick="submitAll(false,${result.rowIndex})">Bestehenden aktualisieren</button>
+          <button class="btn-warning" onclick="submitAll(true,null,true)">Neu anlegen</button>
+          <button class="btn-ghost" onclick="resetAll()">Abbrechen</button>`;
+        return;
+      }
+    } catch(e){ hideStatus(); }
   }
 
   const rows=state.contacts.map((_,i)=>getRow(i));
