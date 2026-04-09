@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kontakt Import">
-<title>Kontakt Import — treppen arte® | v3.4</title>
+<title>Kontakt Import — treppen arte® | v3.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -177,7 +177,7 @@
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="api-status" id="apiStatus"></div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.3);font-family:'DM Mono',monospace;">v3.3</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.3);font-family:'DM Mono',monospace;" id="versionTag"></div>
   </div>
 </div>
 
@@ -192,8 +192,9 @@
   <div class="section-title">Eingabe</div>
   <div class="tabs">
     <button class="tab active" onclick="switchTab('foto')">📷 Foto</button>
-    <button class="tab" onclick="switchTab('pdf')">📄 PDF-Plan</button>
-    <button class="tab" onclick="switchTab('mail')">✉️ E-Mail</button>
+    <button class="tab" onclick="switchTab('pdf')">📄 PDF</button>
+    <button class="tab" onclick="switchTab('mail')">✉️ Mail</button>
+    <button class="tab" onclick="switchTab('manuell')">✏️ Manuell</button>
   </div>
 
   <div id="panel-foto" class="panel active">
@@ -234,6 +235,50 @@
     </div>
   </div>
 
+  <div id="panel-manuell" class="panel">
+    <div class="hint-box" style="margin-bottom:1rem;">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.6px;font-weight:500;">Bestehenden Kontakt suchen & ergänzen</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="searchInput" placeholder="Name eingeben..." style="flex:1;border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface2);" oninput="searchDebounce()">
+        <button class="btn-ghost" style="padding:9px 14px;font-size:13px;white-space:nowrap;" onclick="clearSearch()">✕</button>
+      </div>
+      <div id="searchResults" style="margin-top:8px;display:none;"></div>
+    </div>
+    <div class="contact-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="avatar" id="manuellAvatar">+</div>
+          <div>
+            <div class="card-name" id="manuellTitle">Neuer Kontakt</div>
+            <div class="card-sub" id="manuellSub">Felder ausfüllen oder oben suchen</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="field-grid">
+          <div class="field"><label>Vorname <span class="req">*</span></label><input id="m_Vorname" placeholder="z.B. Thomas" oninput="updateManuellAvatar()"></div>
+          <div class="field"><label>Nachname <span class="req">*</span></label><input id="m_Nachname" placeholder="z.B. Müller" oninput="updateManuellAvatar()"></div>
+          <div class="field"><label>PLZ <span class="req">*</span></label><input id="m_PLZ" placeholder="z.B. 93170"></div>
+          <div class="field"><label>Ort <span class="req">*</span></label><input id="m_Ort" placeholder="z.B. Bernhardswald"></div>
+          <div class="field full"><label>Straße</label><input id="m_Strasse" placeholder="z.B. Hauptstraße 5"></div>
+          <div class="field"><label>Tel 1</label><input id="m_Tel1" placeholder="0171 ..."></div>
+          <div class="field"><label>Tel 2</label><input id="m_Tel2" placeholder="0171 ..."></div>
+          <div class="field full"><label>E-Mail</label><input id="m_Email" placeholder="name@email.de"></div>
+          <div class="field-section">Bauadresse</div>
+          <div class="field"><label>Bau-PLZ</label><input id="m_BauPLZ" placeholder="PLZ Baustelle"></div>
+          <div class="field"><label>Bauort</label><input id="m_Bauort" placeholder="Ort Baustelle"></div>
+          <div class="field full"><label>Baustraße</label><input id="m_BauStrasse" placeholder="Straße Baustelle"></div>
+          <div class="field full"><label>Notizen</label><input id="m_Notizen" placeholder="z.B. Anfrage Holztreppe Neubau EFH"></div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="btnManuell" onclick="submitManuell()">Kontakt anlegen ↗</button>
+      <button class="btn-ghost" onclick="clearManuell()">Felder leeren</button>
+    </div>
+    <div id="statusBarManuell" class="status"></div>
+  </div>
+
   <div id="statusBar" class="status"></div>
 
   <div id="results" class="results">
@@ -247,7 +292,7 @@
     <div id="contactCards"></div>
     <div id="missingBox" style="display:none;" class="missing-box"></div>
     <div class="btn-row" id="actionBtns">
-      <button class="btn-primary" onclick="submitAll(false)">In Google Sheets eintragen ↗</button>
+      <button class="btn-primary" id="btnSubmit" onclick="submitAll(false)">In Google Sheets eintragen ↗</button>
       <button class="btn-ghost" onclick="resetAll()">Abbrechen</button>
     </div>
   </div>
@@ -267,11 +312,100 @@ const PFLICHT_EINS=['Tel1','Email'];
 const SOFT=['Bauort','BauPLZ','BauStrasse'];
 let state={imageBase64:null,imageType:'image/jpeg',pdfText:null,contacts:[],chosenAddrIdx:0};
 
-window.addEventListener('load',()=>{const s=localStorage.getItem('scriptUrl')||DEFAULT_URL;document.getElementById('scriptUrl').value=s;});
+window.addEventListener('load',()=>{
+  const s=localStorage.getItem('scriptUrl')||DEFAULT_URL;
+  document.getElementById('scriptUrl').value=s;
+  // Version aus Titel auslesen
+  const m=document.title.match(/v[\d.]+/);
+  if(m)document.getElementById('versionTag').textContent=m[0];
+});
 function saveConfig(){const u=document.getElementById('scriptUrl').value.trim();localStorage.setItem('scriptUrl',u);const el=document.getElementById('configSaved');el.style.display='inline';setTimeout(()=>el.style.display='none',2000);}
 const DEFAULT_URL='https://script.google.com/macros/s/AKfycbzbElZn4hWdijuFtEcjYgUpVxhapagFzYgy4Z-gLddseuITBPnUbSYkA8z-1nNEIl9F/exec';
 function getUrl(){return document.getElementById('scriptUrl').value.trim()||localStorage.getItem('scriptUrl')||DEFAULT_URL;}
-function switchTab(t){['foto','pdf','mail'].forEach((id,i)=>{document.getElementById('panel-'+id).classList.toggle('active',id===t);document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);});resetAll();}
+function updateManuellAvatar(){const v=(document.getElementById('m_Vorname')||{}).value||'?';const n=(document.getElementById('m_Nachname')||{}).value||'?';document.getElementById('manuellAvatar').textContent=(v[0]+n[0]).toUpperCase();}
+let searchTimer=null;
+function searchDebounce(){clearTimeout(searchTimer);searchTimer=setTimeout(doSearch,400);}
+async function doSearch(){
+  const q=document.getElementById('searchInput').value.trim();
+  const box=document.getElementById('searchResults');
+  if(q.length<2){box.style.display='none';return;}
+  const url=getUrl();
+  try{
+    const resp=await fetch(url,{method:'POST',body:JSON.stringify({action:'searchContact',query:q})});
+    const data=await resp.json();
+    if(!data.results||data.results.length===0){box.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0;">Kein Kontakt gefunden</div>';box.style.display='block';return;}
+    box.innerHTML=data.results.map(r=>`
+      <div onclick="loadContact(${JSON.stringify(r).replace(/"/g,'&quot;')})" style="padding:8px 10px;border-radius:7px;cursor:pointer;border:1px solid var(--border);background:var(--surface);margin-bottom:4px;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:13px;font-weight:500;color:var(--text);">${esc(r.Vorname)} ${esc(r.Nachname)}</div>
+        <div style="font-size:11px;color:var(--text3);">${[r.PLZ,r.Ort].filter(Boolean).join(' ')} ${r.Tel1?'· '+r.Tel1:''}</div>
+      </div>`).join('');
+    box.style.display='block';
+  }catch(e){box.style.display='none';}
+}
+function loadContact(r){
+  const fields=['Vorname','Nachname','PLZ','Ort','Strasse','Tel1','Tel2','Email','Notizen','BauPLZ','Bauort','BauStrasse'];
+  fields.forEach(f=>{const el=document.getElementById('m_'+f);if(el)el.value=r[f]||'';});
+  state._manuellRowIndex=r.rowIndex;
+  document.getElementById('manuellTitle').textContent=r.Vorname+' '+r.Nachname;
+  document.getElementById('manuellSub').textContent='Kontakt aus Sheet — Felder ergänzen & aktualisieren';
+  document.getElementById('manuellAvatar').textContent=(r.Vorname[0]+r.Nachname[0]).toUpperCase();
+  document.getElementById('btnManuell').textContent='Kontakt aktualisieren ↗';
+  document.getElementById('searchResults').style.display='none';
+  document.getElementById('searchInput').value='';
+}
+function clearSearch(){document.getElementById('searchInput').value='';document.getElementById('searchResults').style.display='none';}
+function clearManuell(){
+  ['Vorname','Nachname','PLZ','Ort','Strasse','Tel1','Tel2','Email','BauPLZ','Bauort','BauStrasse','Notizen'].forEach(f=>{const el=document.getElementById('m_'+f);if(el)el.value='';});
+  state._manuellRowIndex=null;
+  document.getElementById('manuellTitle').textContent='Neuer Kontakt';
+  document.getElementById('manuellSub').textContent='Felder ausfüllen oder oben suchen';
+  document.getElementById('manuellAvatar').textContent='+';
+  document.getElementById('btnManuell').textContent='Kontakt anlegen ↗';
+  document.getElementById('statusBarManuell').className='status';
+}
+async function submitManuell(){
+  const f=n=>(document.getElementById('m_'+n)||{}).value||'';
+  const vorname=f('Vorname'),nachname=f('Nachname'),plz=f('PLZ'),ort=f('Ort');
+  if(!vorname||!nachname||!plz||!ort){showStatusM('Vorname, Nachname, PLZ und Ort sind Pflichtfelder','error');return;}
+  const url=getUrl();
+  const btn=document.getElementById('btnManuell');
+  btn.disabled=true;btn.textContent='Wird gespeichert...';
+  const now=new Date();
+  const datum=now.toLocaleDateString('de-DE')+' '+now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  const notizen=[f('Notizen'),'Anfrage: '+datum].filter(Boolean).join(' | ');
+  const row=[vorname,nachname,plz,ort,f('Strasse'),f('Tel1'),f('Tel2'),f('Email'),notizen,'','','','','',f('Bauort'),f('BauPLZ'),f('BauStrasse'),datum];
+  // Update-Modus
+  if(state._manuellRowIndex){
+    try{
+      const resp=await fetch(url,{method:'POST',body:JSON.stringify({action:'updateRow',rowIndex:state._manuellRowIndex,row})});
+      const result=await resp.json();
+      if(result.status==='ok'){showStatusM('Kontakt erfolgreich aktualisiert!','success');clearManuell();}
+      else{showStatusM('Fehler: '+(result.message||'unbekannt'),'error');}
+    }catch(e){showStatusM('Verbindungsfehler: '+e.message,'error');}
+    btn.disabled=false;btn.textContent='Kontakt aktualisieren ↗';
+    return;
+  }
+  // Neu anlegen — Duplikat-Check
+  showStatusM('Prüfe auf Duplikate...','loading');
+  try{
+    const dr=await fetch(url,{method:'POST',body:JSON.stringify({action:'checkDuplicate',Vorname:vorname,Nachname:nachname,Email:f('Email')})});
+    const dd=await dr.json();
+    if(dd.status==='duplicate'){
+      const ex=dd.existing;
+      showStatusM(`Kontakt bereits vorhanden: ${ex.Vorname} ${ex.Nachname} — ${ex.PLZ} ${ex.Ort}. Oben suchen und ergänzen.`,'error');
+      btn.disabled=false;btn.textContent='Kontakt anlegen ↗';
+      return;
+    }
+  }catch(e){}
+  try{
+    const resp=await fetch(url,{method:'POST',body:JSON.stringify({rows:[row],sheetName:'Kontakte'})});
+    const result=await resp.json();
+    if(result.status==='ok'){showStatusM('Kontakt erfolgreich angelegt!','success');clearManuell();}
+    else{showStatusM('Fehler: '+(result.message||'unbekannt'),'error');}
+  }catch(e){showStatusM('Verbindungsfehler: '+e.message,'error');}
+  btn.disabled=false;btn.textContent='Kontakt anlegen ↗';
+}
+function showStatusM(msg,type){const b=document.getElementById('statusBarManuell');b.className='status show '+type;b.innerHTML=type==='loading'?`<div class="spinner"></div>${msg}`:msg;}
 function dragOver(e,id){e.preventDefault();document.getElementById(id).classList.add('drag-over');}
 function dragLeave(id){document.getElementById(id).classList.remove('drag-over');}
 function dropFile(e,mode){e.preventDefault();dragLeave(mode==='foto'?'dropFoto':'dropPdf');const file=e.dataTransfer.files[0];if(!file)return;if(mode==='foto'){const i=document.getElementById('inputFoto');const d=new DataTransfer();d.items.add(file);i.files=d.files;loadImage(i);}else{const i=document.getElementById('inputPdf');const d=new DataTransfer();d.items.add(file);i.files=d.files;loadPDF(i);}}
@@ -323,6 +457,7 @@ function getRow(idx){
 async function submitAll(force, updateRowIndex, skipDuplicateCheck) {
   const url = getUrl();
   if(!url){showStatus('Bitte Script URL eintragen','error');return;}
+  lockSubmit();
 
   // Wenn Update-Modus
   if(updateRowIndex) {
@@ -392,7 +527,9 @@ async function submitAll(force, updateRowIndex, skipDuplicateCheck) {
     }else{showStatus('Fehler: '+(result.message||'unbekannt'),'error');}
   }catch(e){showStatus('Verbindungsfehler: '+e.message,'error');}
 }
-function resetBtns(){document.getElementById('actionBtns').innerHTML=`<button class="btn-primary" onclick="submitAll(false)">In Google Sheets eintragen ↗</button><button class="btn-ghost" onclick="resetAll()">Abbrechen</button>`;}
+function resetBtns(){document.getElementById('actionBtns').innerHTML=`<button class="btn-primary" id="btnSubmit" onclick="submitAll(false)">In Google Sheets eintragen ↗</button><button class="btn-ghost" onclick="resetAll()">Abbrechen</button>`;}
+function lockSubmit(){const b=document.getElementById('btnSubmit');if(b){b.disabled=true;b.onclick=null;b.textContent='Bitte warten...';}}
+function unlockSubmit(){resetBtns();}
 function showStatus(msg,type='loading'){const b=document.getElementById('statusBar');b.className='status show '+type;b.innerHTML=type==='loading'?`<div class="spinner"></div>${msg}`:msg;}
 function hideStatus(){document.getElementById('statusBar').className='status';}
 function resetAll(){document.getElementById('results').classList.remove('show');document.getElementById('successScreen').classList.remove('show');document.getElementById('addrChooser').style.display='none';document.getElementById('contactCards').innerHTML='';document.getElementById('missingBox').style.display='none';hideStatus();state.contacts=[];resetBtns();}
