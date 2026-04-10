@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kontakt Import">
-<title>Kontakt Import — treppen arte® | v4.0</title>
+<title>Kontakt Import — treppen arte® | v4.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -312,15 +312,16 @@ const PFLICHT_EINS=['Tel1','Email'];
 const SOFT=['Bauort','BauPLZ','BauStrasse'];
 let state={imageBase64:null,imageType:'image/jpeg',pdfText:null,contacts:[],chosenAddrIdx:0};
 
+// *** AKTUELLE DEPLOYMENT URL v6.3 ***
+const DEFAULT_URL='https://script.google.com/macros/s/AKfycbzbElZn4hWdijuFtEcjYgUpVxhapagFzYgy4Z-gLddseuITBPnUbSYkA8z-1nNEIl9F/exec';
+
 window.addEventListener('load',()=>{
   const s=localStorage.getItem('scriptUrl')||DEFAULT_URL;
   document.getElementById('scriptUrl').value=s;
-  // Version aus Titel auslesen
   const m=document.title.match(/v[\d.]+/);
   if(m)document.getElementById('versionTag').textContent=m[0];
 });
 function saveConfig(){const u=document.getElementById('scriptUrl').value.trim();localStorage.setItem('scriptUrl',u);const el=document.getElementById('configSaved');el.style.display='inline';setTimeout(()=>el.style.display='none',2000);}
-const DEFAULT_URL='https://script.google.com/macros/s/AKfycbxGwoorJOBlZE1IET24gzr9Jv18o3FIIrLPObKr4gMrnv2jBBSHIS_4AIGzc6LF9Y9f/exec';
 function getUrl(){return document.getElementById('scriptUrl').value.trim()||localStorage.getItem('scriptUrl')||DEFAULT_URL;}
 function switchTab(t){['foto','pdf','mail','manuell'].forEach((id,i)=>{document.getElementById('panel-'+id).classList.toggle('active',id===t);document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);});if(t!=='manuell')resetAll();}
 function updateManuellAvatar(){const v=(document.getElementById('m_Vorname')||{}).value||'?';const n=(document.getElementById('m_Nachname')||{}).value||'?';document.getElementById('manuellAvatar').textContent=(v[0]+n[0]).toUpperCase();}
@@ -376,7 +377,6 @@ async function submitManuell(){
   const notizen=[f('Notizen')].filter(Boolean).join(' | ');
   const row=[vorname,nachname,plz,ort,f('Strasse'),f('Tel1'),f('Tel2'),f('Email'),notizen,'','','','','',f('Bauort'),f('BauPLZ'),f('BauStrasse'),datum];
   const rowIdx=parseInt(state._manuellRowIndex||0);
-  // Update-Modus
   if(rowIdx>0){
     try{
       const payload={action:'updateRow',rowIndex:rowIdx,row:row};
@@ -387,7 +387,6 @@ async function submitManuell(){
     }catch(e){showStatusM('Verbindungsfehler: '+e.message,'error');btn.disabled=false;btn.textContent='Kontakt aktualisieren ↗';}
     return;
   }
-  // Neu anlegen — Duplikat-Check
   showStatusM('Prüfe auf Duplikate...','loading');
   try{
     const dr=await fetch(url,{method:'POST',body:JSON.stringify({action:'checkDuplicate',Vorname:vorname,Nachname:nachname,Email:f('Email')})});
@@ -419,15 +418,19 @@ const SYS_CONTACT=`Du extrahierst Kontaktdaten aus E-Mails für ein Treppenbauun
 Antworte NUR mit reinem JSON-Array, kein Markdown.
 Format: [{"Vorname":"","Nachname":"","PLZ":"","Ort":"","Strasse":"","Tel1":"","Tel2":"","Email":"","BauPLZ":"","Bauort":"","BauStrasse":"","Notizen":""}]
 
-WICHTIGSTE REGELN:
-- Vorname + Nachname = der Bauherr / die Bauherrin (wer zahlt, wer Eigentümer ist)
-- Wenn zwei Personen als Bauherren (Ehepaar/Paar): erste Person in Vorname/Nachname, zweite in Notizen als "Partner: [Vorname Nachname]"
-- Wenn Architekt/Planer schreibt aber Bauherr genannt: Bauherr in Vorname/Nachname, Architekt in Notizen als "Ansprechpartner: [Name]"
-- Wenn unklar wer Bauherr: Absender nehmen und in Notizen vermerken
-- Telefonnummern IMMER extrahieren — auch mitten im Text: "Meine Nummer: 0171 4234320"
+FIRMENMITARBEITER — NIEMALS als Kontakt eintragen:
+- Felix Auburger, Richard Auburger, Ulrike Auburger (und alle Varianten)
+- Absender mit @treppenarte.de
+- Das ist das Treppenbauunternehmen selbst — kein Kunde
+
+KONTAKT-REGELN:
+- Vorname + Nachname = der Bauherr (wer zahlt, wer Eigentümer ist)
+- Zwei Bauherren (Ehepaar/Paar): erste Person in Vorname/Nachname, zweite als "Partner: [Vorname Nachname]" in Notizen
+- Architekt/Planer schreibt, aber Bauherr genannt: Bauherr in Vorname/Nachname, Architekt als "Ansprechpartner: [Name]" in Notizen
+- Telefonnummern IMMER extrahieren — auch mitten im Text
 - Tel1 = erste Nummer, Tel2 = zweite falls vorhanden
-- Email = Absender-Email
-- Notizen = 1 Satz Zusammenfassung + Partner falls vorhanden + Ansprechpartner falls abweichend
+- Email = E-Mail-Adresse des Kunden (nicht @treppenarte.de)
+- Notizen = 1 Satz Zusammenfassung
 - Leere Felder = leerer String`;
 const SYS_PDF=`Du analysierst den Titelblock eines deutschen Bauplans.
 EXTRAHIERE NUR: 1. Bauherr (bei "Bauherr:","BAUHERR:","Auftraggeber:") 2. Bauort (Baustellen-Adresse)
@@ -453,15 +456,12 @@ function getRow(idx){
   const now=new Date();
   const datum=now.toLocaleDateString('de-DE')+' '+now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
   const notizen=[f('Notizen'),'Anfrage: '+datum].filter(Boolean).join(' | ');
-  // A-Q + R=Anfragedatum
   return[f('Vorname'),f('Nachname'),f('PLZ'),f('Ort'),f('Strasse'),f('Tel1'),f('Tel2'),f('Email'),notizen,'','','','','',f('Bauort'),f('BauPLZ'),f('BauStrasse'),datum];
 }
 async function submitAll(force, updateRowIndex, skipDuplicateCheck) {
   const url = getUrl();
   if(!url){showStatus('Bitte Script URL eintragen','error');return;}
   lockSubmit();
-
-  // Wenn Update-Modus
   if(updateRowIndex) {
     const rows = state.contacts.map((_,i)=>getRow(i));
     showStatus('Kontakt wird aktualisiert...','loading');
@@ -478,8 +478,6 @@ async function submitAll(force, updateRowIndex, skipDuplicateCheck) {
     } catch(e){ showStatus('Verbindungsfehler: '+e.message,'error'); }
     return;
   }
-
-  // Pflichtfeld-Check — nur wenn nicht force
   if(!force){
     const missing=state.contacts.flatMap((_,i)=>getMissing(i));
     if(missing.length>0){
@@ -490,8 +488,6 @@ async function submitAll(force, updateRowIndex, skipDuplicateCheck) {
       return;
     }
   }
-
-  // Duplikat-Check — läuft IMMER, auch bei force
   const vorname = (document.getElementById('c0_Vorname')||{}).value || (state.contacts[0]||{}).Vorname || '';
   const nachname = (document.getElementById('c0_Nachname')||{}).value || (state.contacts[0]||{}).Nachname || '';
   const email = (document.getElementById('c0_Email')||{}).value || (state.contacts[0]||{}).Email || '';
@@ -514,7 +510,6 @@ async function submitAll(force, updateRowIndex, skipDuplicateCheck) {
       }
     } catch(e){ hideStatus(); }
   }
-
   const rows=state.contacts.map((_,i)=>getRow(i));
   showStatus(rows.length+' Kontakt(e) werden eingetragen...','loading');
   try{
@@ -531,7 +526,6 @@ async function submitAll(force, updateRowIndex, skipDuplicateCheck) {
 }
 function resetBtns(){document.getElementById('actionBtns').innerHTML=`<button class="btn-primary" id="btnSubmit" onclick="submitAll(false)">In Google Sheets eintragen ↗</button><button class="btn-ghost" onclick="resetAll()">Abbrechen</button>`;}
 function lockSubmit(){const b=document.getElementById('btnSubmit');if(b){b.disabled=true;b.onclick=null;b.textContent='Bitte warten...';}}
-function unlockSubmit(){resetBtns();}
 function showStatus(msg,type='loading'){const b=document.getElementById('statusBar');b.className='status show '+type;b.innerHTML=type==='loading'?`<div class="spinner"></div>${msg}`:msg;}
 function hideStatus(){document.getElementById('statusBar').className='status';}
 function resetAll(){document.getElementById('results').classList.remove('show');document.getElementById('successScreen').classList.remove('show');document.getElementById('addrChooser').style.display='none';document.getElementById('contactCards').innerHTML='';document.getElementById('missingBox').style.display='none';hideStatus();state.contacts=[];resetBtns();}
